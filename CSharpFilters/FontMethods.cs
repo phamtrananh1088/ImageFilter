@@ -180,6 +180,18 @@ namespace CSharpFilters
                             rw = x - rx;
                             Rectangle bm = new Rectangle(rx, ry, rw, rh);
                             brow.Add(bm);
+                            if (brow.Count > 1)
+                            {
+                                Rectangle f = brow[brow.Count - 1];
+                                Rectangle l = brow[brow.Count - 2];
+                                //minimum distance between word 4px
+                                if (f.X - 4 - l.X - l.Width < 0)
+                                {
+                                    Rectangle n = new Rectangle(l.X, l.Y,f.Width + f.X - l.X, l.Height);
+                                    brow.RemoveRange(brow.Count - 2, 2);
+                                    brow.Add(n);
+                                }
+                            }
                             rx = ry = rw = rh = 0;
                             fs = false;
                         }
@@ -210,6 +222,28 @@ namespace CSharpFilters
                                  new Rectangle(0, 0, ab[i].Width, ab[i].Height),
                                  GraphicsUnit.Pixel);
                     y += ab[i].Height;
+                }
+            }
+            return target;
+        }
+        public static Bitmap JoinBitmapH(Bitmap[] ab)
+        {
+            if (ab == null || ab.Length == 0) return null;
+            int w = ab.Sum(m => m.Width);
+            int h = ab.Max(m => m.Height);
+            Bitmap target = new Bitmap(w, h);
+
+            using (Graphics g = Graphics.FromImage(target))
+            {
+                g.Clear(Color.Black);
+                int x = 0;
+                for (int i = 0; i < ab.Length; i++)
+                {
+                    Rectangle cropRect = new Rectangle(x, 0, ab[i].Width, ab[i].Height);
+                    g.DrawImage(ab[i], cropRect,
+                                 new Rectangle(0, 0, ab[i].Width, ab[i].Height),
+                                 GraphicsUnit.Pixel);
+                    x += ab[i].Width;
                 }
             }
             return target;

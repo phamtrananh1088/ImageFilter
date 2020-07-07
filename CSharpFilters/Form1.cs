@@ -402,7 +402,7 @@ namespace CSharpFilters
 			if(DialogResult.OK == openFileDialog.ShowDialog())
 			{
 				_sInitialDirectory = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
-				m_Bitmap = (Bitmap)Bitmap.FromFile(openFileDialog.FileName, false);
+				m_Bitmap = (Bitmap)Bitmap.FromFile(openFileDialog.FileName, true);
 				this.AutoScroll = true;
 				this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 				this.Invalidate();
@@ -632,8 +632,14 @@ namespace CSharpFilters
         private void OnImageToTextR1(object sender, System.EventArgs e)
 		{
 			var arr = FontMethods.ImageToTextR1(m_Bitmap);
-			var a = FontMethods.ImageToTextR2(arr[0]);
-			m_Bitmap = FontMethods.JoinBitmap(a);
+            Bitmap[][] br = new Bitmap[arr.Length][];
+            Bitmap[] cr = new Bitmap[arr.Length];
+            for (int i = 0; i < arr.Length; i++)
+			{
+			    br[i] = FontMethods.ImageToTextR2(arr[i]);
+                cr[i] = FontMethods.JoinBitmap(br[i]);
+			}
+            m_Bitmap = FontMethods.JoinBitmapH(cr);
 			this.AutoScroll = true;
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();

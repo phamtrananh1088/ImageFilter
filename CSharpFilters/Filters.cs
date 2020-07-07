@@ -113,11 +113,11 @@ namespace CSharpFilters
 						red = p[2];
 						if(blue>= nBrightness && green >= nBrightness && red >= nBrightness)
 						{
-							p[0] = p[1] = p[2] = 255;
+							p[0] = p[1] = p[2] = (byte)255;
 						}
 						else
 						{
-							p[0] = p[1] = p[2] = 0;
+							p[0] = p[1] = p[2] = (byte)0;
 						}
 						//p[0] = p[1] = p[2] = (byte)(.299 * red + .587 * green + .114 * blue);
 

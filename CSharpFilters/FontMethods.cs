@@ -123,14 +123,75 @@ namespace CSharpFilters
 
             b.UnlockBits(bmData);
 
-            Bitmap[] ar = new Bitmap[brow.Count];
-            for (int i = 0; i < brow.Count; i++)
-            {
-                ar[i] = FontMethods.CropBitmap(b, brow[i]);
-            }
+            Bitmap[] ar = FontMethods.CropBitmap(b, brow.ToArray());
             return ar;
         }
 
+        public static Bitmap[] ImageToTextR2(Bitmap b)
+        {
+            // GDI+ still lies to us - the return format is BGR, NOT RGB.
+            BitmapData bmData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+
+            int stride = bmData.Stride;
+            System.IntPtr Scan0 = bmData.Scan0;
+
+            List<Rectangle> brow = new List<Rectangle>();
+            unsafe
+            {
+                byte* p = (byte*)(void*)Scan0;
+
+                int nOffset = stride - b.Width * 3;
+
+                byte red, green, blue;
+                int rx, ry, rw, rh;
+                rx = ry = rw = rh = 0;
+                bool fs = false;
+                int[] fr = new int[b.Width];
+                for (int y = 0; y < b.Height; ++y)
+                {
+                    for (int x = 0; x < b.Width; ++x)
+                    {
+                        blue = p[0];
+                        green = p[1];
+                        red = p[2];
+                        if (blue == 0 && green == 0 && red == 0)
+                        {
+                            fr[x]++;
+                        }
+                        p += 3;
+                    }
+                    p += nOffset;
+                }
+                for (int x = 0; x < b.Width; ++x)
+                {
+                    //first possition has byte -> start column
+                    if ((!fs) && fr[x] < b.Height)
+                    {
+                        rx = x;
+                        ry = 0;
+                        rh = b.Height;
+                        fs = true;
+                    }
+                    else
+                    {
+                        //fisrt possition no byte after has byte -> end clumn 
+                        if (fs && ((fr[x] == b.Height) || (x + 1 == b.Width)))
+                        {
+                            rw = x - rx;
+                            Rectangle bm = new Rectangle(rx, ry, rw, rh);
+                            brow.Add(bm);
+                            rx = ry = rw = rh = 0;
+                            fs = false;
+                        }
+                    }
+                }
+            }
+
+            b.UnlockBits(bmData);
+
+            Bitmap[] ar = FontMethods.CropBitmap(b, brow.ToArray());
+            return ar;
+        }
         public static Bitmap JoinBitmap(Bitmap[] ab)
         {
             if (ab == null || ab.Length == 0) return null;
@@ -140,12 +201,13 @@ namespace CSharpFilters
 
             using (Graphics g = Graphics.FromImage(target))
             {
+                g.Clear(Color.Black);
                 int y = 0;
                 for (int i = 0; i < ab.Length; i++)
                 {
                     Rectangle cropRect = new Rectangle(0, y, ab[i].Width, ab[i].Height);
                     g.DrawImage(ab[i], cropRect,
-                                 cropRect,
+                                 new Rectangle(0, 0, ab[i].Width, ab[i].Height),
                                  GraphicsUnit.Pixel);
                     y += ab[i].Height;
                 }
@@ -158,9 +220,33 @@ namespace CSharpFilters
 
             using (Graphics g = Graphics.FromImage(target))
             {
+                // must not be transparent background 
+                g.Clear(Color.Black);
                 g.DrawImage(b, new Rectangle(0, 0, target.Width, target.Height),
                                  cropRect,
                                  GraphicsUnit.Pixel);
+            }
+            return target;
+        }
+
+        private static Bitmap[] CropBitmap(Bitmap b, Rectangle[] cropRect)
+        {
+            if (cropRect==null || cropRect.Length==0)
+            {
+                return null;
+            }
+            Bitmap[] target = new Bitmap[cropRect.Length];
+            for (int i = 0; i < cropRect.Length; i++)
+            {
+                target[i] = new Bitmap(cropRect[i].Width, cropRect[i].Height);
+                using (Graphics g = Graphics.FromImage(target[i]))
+                {
+                    // must not be transparent background 
+                    g.Clear(Color.Black);
+                    g.DrawImage(b, new Rectangle(0, 0, target[i].Width, target[i].Height),
+                                     cropRect[i],
+                                     GraphicsUnit.Pixel);
+                }
             }
             return target;
         }

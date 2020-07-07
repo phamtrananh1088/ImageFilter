@@ -389,17 +389,19 @@ namespace CSharpFilters
 		{
 		}
 
+		private string _sInitialDirectory = "c:\\";
 		private void File_Load(object sender, System.EventArgs e)
 		{
 			OpenFileDialog openFileDialog = new OpenFileDialog();
 
-			openFileDialog.InitialDirectory = "c:\\" ;
+			openFileDialog.InitialDirectory = _sInitialDirectory;
 			openFileDialog.Filter = "Bitmap files (*.bmp)|*.bmp|Jpeg files (*.jpg)|*.jpg|All valid files (*.bmp/*.jpg)|*.bmp/*.jpg";
 			openFileDialog.FilterIndex = 2 ;
 			openFileDialog.RestoreDirectory = true ;
 
 			if(DialogResult.OK == openFileDialog.ShowDialog())
 			{
+				_sInitialDirectory = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
 				m_Bitmap = (Bitmap)Bitmap.FromFile(openFileDialog.FileName, false);
 				this.AutoScroll = true;
 				this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
@@ -629,7 +631,9 @@ namespace CSharpFilters
 
         private void OnImageToTextR1(object sender, System.EventArgs e)
 		{
-            m_Bitmap = FontMethods.JoinBitmap(FontMethods.ImageToTextR1(m_Bitmap));
+			var arr = FontMethods.ImageToTextR1(m_Bitmap);
+			var a = FontMethods.ImageToTextR2(arr[0]);
+			m_Bitmap = FontMethods.JoinBitmap(a);
 			this.AutoScroll = true;
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();

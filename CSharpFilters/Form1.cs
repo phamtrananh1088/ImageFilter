@@ -631,6 +631,8 @@ namespace CSharpFilters
 
         private void OnImageToTextR1(object sender, System.EventArgs e)
 		{
+            m_Undo = (Bitmap)m_Bitmap.Clone();
+            if (BitmapFilter.GrayToBlack(m_Bitmap, 230));
 			var arr = FontMethods.ImageToTextR1(m_Bitmap);
             Bitmap[][] br = new Bitmap[arr.Length][];
             Bitmap[] cr = new Bitmap[arr.Length];
@@ -640,6 +642,7 @@ namespace CSharpFilters
                 cr[i] = FontMethods.JoinBitmap(br[i]);
 			}
             m_Bitmap = FontMethods.JoinBitmapH(cr);
+            m_Bitmap = br[0][0];
 			this.AutoScroll = true;
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();

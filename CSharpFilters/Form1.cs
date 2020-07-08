@@ -632,10 +632,15 @@ namespace CSharpFilters
 
 		private void OnImageFromText(object sender, System.EventArgs e)
 		{
-			m_Bitmap = (Bitmap)FontMethods.Render();
-			this.AutoScroll = true;
-			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
-			this.Invalidate();
+			KanjiInput dlg = new KanjiInput();
+			dlg.sValue = "—ˆ";
+			if (DialogResult.OK == dlg.ShowDialog())
+			{
+				m_Bitmap = (Bitmap)FontMethods.Render(dlg.sValue);
+				this.AutoScroll = true;
+				this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+				this.Invalidate();
+			}
 		}
 
         private void OnImageToTextR1(object sender, System.EventArgs e)
@@ -652,6 +657,7 @@ namespace CSharpFilters
 			}
             m_Bitmap = FontMethods.JoinBitmapH(cr);
             m_Bitmap = br[0][0];
+			m_Bitmap = FontMethods.BoundCore(m_Bitmap);
 			this.AutoScroll = true;
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
@@ -662,7 +668,8 @@ namespace CSharpFilters
             m_Undo = (Bitmap)m_Bitmap.Clone();
             BitmapFilter.GrayToBlack(m_Bitmap, 230);
             var arr = FontMethods.ImageToBackBone(m_Bitmap);
-            this.AutoScroll = true;
+			m_Bitmap = FontMethods.BoundCore(m_Bitmap);
+			this.AutoScroll = true;
             this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
             this.Invalidate();
         }

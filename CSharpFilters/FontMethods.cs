@@ -25,7 +25,7 @@ namespace CSharpFilters
             }
             return image;
         }
-        public static Image Render()
+        public static Image Render(string text = "来")
         {
             // create the final image to render into
             var image = new Bitmap(40, 40, PixelFormat.Format24bppRgb);
@@ -43,7 +43,7 @@ namespace CSharpFilters
                     memoryGraphics.Clear(Color.Black);
 
                     // execute GDI text rendering
-                    TextRenderer.DrawText(memoryGraphics, "興", new Font("MS gothic", 24), new Point(0, 0), Color.White, Color.Black);
+                    TextRenderer.DrawText(memoryGraphics, text, new Font("MS gothic", 24,FontStyle.Bold), new Point(0, 0), Color.White, Color.Black);
                 }
 
                 // copy from memory buffer to image
@@ -257,6 +257,38 @@ namespace CSharpFilters
             System.IntPtr Scan0 = bmData.Scan0;
 
             List<Rectangle> brow = new List<Rectangle>();
+
+            int[][] mr = new int[b.Width][];
+            int[][] fr = new int[b.Height][];
+            unsafe
+            {
+                byte* p = (byte*)(void*)Scan0;
+
+                int nOffset = stride - b.Width * 3;
+
+                byte red, green, blue;
+                for (int x = 0; x < b.Width; ++x)
+                {
+                    mr[x] = new int[b.Height];
+                }
+                for (int y = 0; y < b.Height; ++y)
+                {
+                    for (int x = 0; x < b.Width; ++x)
+                    {
+                        blue = p[0];
+                        green = p[1];
+                        red = p[2];
+                        if (blue == 255 && green == 255 && red == 255)
+                        {
+                            mr[x][y] = 1;
+                        }
+                        p += 3;
+                    }
+                    p += nOffset;
+                }
+                FontMethods.Converge(mr, 5);
+            }
+
             unsafe
             {
                 byte* p = (byte*)(void*)Scan0;
@@ -266,15 +298,66 @@ namespace CSharpFilters
                 byte red, green, blue;
                 for (int y = 0; y < b.Height; ++y)
                 {
-                    int fr = 0;
                     for (int x = 0; x < b.Width; ++x)
                     {
                         blue = p[0];
                         green = p[1];
                         red = p[2];
-                        if (blue == 0 && green == 0 && red == 0)
+                        if (blue == 255 && green == 255 && red == 255)
                         {
-                            fr++;
+                            if (mr[x][y] == 0)
+                                p[0] = p[1] = p[2] = 0;
+                        }
+                        p += 3;
+                    }
+                    p += nOffset;
+                }
+            }
+
+            unsafe
+            {
+                byte* p = (byte*)(void*)Scan0;
+
+                int nOffset = stride - b.Width * 3;
+
+                byte red, green, blue;
+                for (int y = 0; y < b.Height; ++y)
+                {
+                    fr[y] = new int[b.Width];
+                    for (int x = 0; x < b.Width; ++x)
+                    {
+                        blue = p[0];
+                        green = p[1];
+                        red = p[2];
+                        if (blue == 255 && green == 255 && red == 255)
+                        {
+                            fr[y][x] = 1;
+                        }
+                        p += 3;
+                    }
+                    p += nOffset;
+                }
+                FontMethods.Converge(fr, 5);
+            }
+
+            unsafe
+            {
+                byte* p = (byte*)(void*)Scan0;
+
+                int nOffset = stride - b.Width * 3;
+
+                byte red, green, blue;
+                for (int y = 0; y < b.Height; ++y)
+                {
+                    for (int x = 0; x < b.Width; ++x)
+                    {
+                        blue = p[0];
+                        green = p[1];
+                        red = p[2];
+                        if (blue == 255 && green == 255 && red == 255)
+                        {
+                            if (fr[y][x] == 0)
+                                p[0] = p[1] = p[2] = 0;
                         }
                         p += 3;
                     }
@@ -284,6 +367,89 @@ namespace CSharpFilters
 
             b.UnlockBits(bmData);
 
+            return true;
+        }
+
+        public static Bitmap BoundCore(Bitmap b)
+        {
+            // GDI+ still lies to us - the return format is BGR, NOT RGB.
+            BitmapData bmData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+
+            int stride = bmData.Stride;
+            System.IntPtr Scan0 = bmData.Scan0;
+
+            int rw, rn, re, rs;
+            rw = rn = re = rs = 0;
+            unsafe
+            {
+                byte* p = (byte*)(void*)Scan0;
+
+                int nOffset = stride - b.Width * 3;
+
+                byte red, green, blue;
+                for (int y = 0; y < b.Height; ++y)
+                {
+                    for (int x = 0; x < b.Width; ++x)
+                    {
+                        blue = p[0];
+                        green = p[1];
+                        red = p[2];
+                        if (blue == 255 && green == 255 && red == 255)
+                        {
+                            if (rw == 0)
+                                rw = x;
+                            if (rw > 0)
+                                rw = Math.Min(rw, x);
+                            if (re == 0)
+                                re = x;
+                            if (re > 0)
+                                re = Math.Max(re, x);
+                            if (rn == 0)
+                                rn = y;
+                            if (rn > 0)
+                                rn = Math.Min(rn, y);
+                            if (rs == 0)
+                                rs = y;
+                            if (rs > 0)
+                                rs = Math.Max(rs, y);
+                        }
+                        p += 3;
+                    }
+                    p += nOffset;
+                }
+            }
+
+            b.UnlockBits(bmData);
+
+            return FontMethods.CropBitmap(b,new Rectangle(rw,rn,re-rw,rs-rn));
+        }
+
+        private static bool Converge(int[][] b, int range = 4)
+        {
+            for (int i = 0; i < b.Length; i++)
+            {
+                int[] c = b[i];
+                int r = 0;
+                for (int j = 0; j < c.Length; j++)
+                {
+                    int x = c[j];
+                    if (x == 1) {
+                        r++;
+                    }
+                    else
+                    {
+                        if (r <= range && r > 1)
+                        {
+                            for (int k = 1; k <= r; k++)
+                            {
+                                c[j - k] = 0;
+                            }
+                            if (j - 1 - r / 2 >= 0) c[j - 1 - r / 2] = 1;
+                        }
+                        r = 0;
+                    }
+                }
+            }
             return true;
         }
         private static Bitmap CropBitmap(Bitmap b, Rectangle cropRect)

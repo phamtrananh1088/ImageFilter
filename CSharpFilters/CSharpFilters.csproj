@@ -102,6 +102,9 @@
     <Compile Include="GammaInput.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="KanjiInput.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Parameter.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -117,6 +120,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="GammaInput.resx">
       <DependentUpon>GammaInput.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="KanjiInput.resx">
+      <DependentUpon>KanjiInput.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Parameter.resx">
       <DependentUpon>Parameter.cs</DependentUpon>

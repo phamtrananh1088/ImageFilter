@@ -13,6 +13,7 @@ namespace CSharpFilters
 	/// </summary>
 	public class Form1 : System.Windows.Forms.Form
 	{
+		private const int BRIGHT = 225;
 		private System.Drawing.Bitmap m_Bitmap;
 		private System.Drawing.Bitmap m_Undo;
 		private System.Windows.Forms.MainMenu mainMenu1;
@@ -49,8 +50,9 @@ namespace CSharpFilters
 		private System.Windows.Forms.MenuItem Undo;
 		private System.Windows.Forms.MenuItem FilterCustom;
 		private System.Windows.Forms.MenuItem ImageFromText;
-        private System.Windows.Forms.MenuItem ImageToTextR1;
-        private System.Windows.Forms.MenuItem ImageToBackBone;
+		private System.Windows.Forms.MenuItem ImageToTextR1;
+		private System.Windows.Forms.MenuItem ImageToBackBone;
+		private System.Windows.Forms.MenuItem AverageSquare;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -60,22 +62,22 @@ namespace CSharpFilters
 		{
 			InitializeComponent();
 
-			m_Bitmap= new Bitmap(2, 2);
+			m_Bitmap = new Bitmap(2, 2);
 		}
 
 		/// <summary>
 		/// Clean up any resources being used.
 		/// </summary>
-		protected override void Dispose( bool disposing )
+		protected override void Dispose(bool disposing)
 		{
-			if( disposing )
+			if (disposing)
 			{
-				if (components != null) 
+				if (components != null)
 				{
 					components.Dispose();
 				}
 			}
-			base.Dispose( disposing );
+			base.Dispose(disposing);
 		}
 
 		#region Windows Form Designer generated code
@@ -117,9 +119,10 @@ namespace CSharpFilters
 			this.Zoom500 = new System.Windows.Forms.MenuItem();
 			this.FilterCustom = new System.Windows.Forms.MenuItem();
 			this.menuItem6 = new System.Windows.Forms.MenuItem();
-            this.ImageFromText = new System.Windows.Forms.MenuItem();
-            this.ImageToTextR1 = new System.Windows.Forms.MenuItem();
-            this.ImageToBackBone = new System.Windows.Forms.MenuItem();
+			this.ImageFromText = new System.Windows.Forms.MenuItem();
+			this.ImageToTextR1 = new System.Windows.Forms.MenuItem();
+			this.ImageToBackBone = new System.Windows.Forms.MenuItem();
+			this.AverageSquare = new System.Windows.Forms.MenuItem();
 			// 
 			// mainMenu1
 			// 
@@ -343,8 +346,9 @@ namespace CSharpFilters
 			this.menuItem6.Index = 5;
 			this.menuItem6.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																					  this.ImageFromText,
-                                                                                      this.ImageToTextR1,
-                                                                                      this.ImageToBackBone});
+																					  this.ImageToTextR1,
+																					  this.ImageToBackBone,
+																					  this.AverageSquare});
 			this.menuItem6.Text = "Image";
 			// 
 			// ImageFromText
@@ -352,18 +356,24 @@ namespace CSharpFilters
 			this.ImageFromText.Index = 0;
 			this.ImageFromText.Text = "ImageFromText";
 			this.ImageFromText.Click += new System.EventHandler(this.OnImageFromText);
-            // 
-            // ImageToTextR1
-            // 
-            this.ImageToTextR1.Index = 1;
-            this.ImageToTextR1.Text = "ImageToTextR1";
-            this.ImageToTextR1.Click += new System.EventHandler(this.OnImageToTextR1);
-            // 
-            // ImageToBackBone
-            // 
-            this.ImageToBackBone.Index = 2;
-            this.ImageToBackBone.Text = "ImageToBackBone";
-            this.ImageToBackBone.Click += new System.EventHandler(this.OnImageToBackBone);
+			// 
+			// ImageToTextR1
+			// 
+			this.ImageToTextR1.Index = 1;
+			this.ImageToTextR1.Text = "ImageToTextR1";
+			this.ImageToTextR1.Click += new System.EventHandler(this.OnImageToTextR1);
+			// 
+			// ImageToBackBone
+			// 
+			this.ImageToBackBone.Index = 2;
+			this.ImageToBackBone.Text = "ImageToBackBone";
+			this.ImageToBackBone.Click += new System.EventHandler(this.OnImageToBackBone);
+			// 
+			// AverageSquare
+			// 
+			this.AverageSquare.Index = 3;
+			this.AverageSquare.Text = "AverageSquare";
+			this.AverageSquare.Click += new System.EventHandler(this.OnAverageSquare);
 			// 
 			// Form1
 			// 
@@ -382,16 +392,16 @@ namespace CSharpFilters
 		/// The main entry point for the application.
 		/// </summary>
 		[STAThread]
-		static void Main() 
+		static void Main()
 		{
 			Application.Run(new Form1());
 		}
 
-		protected override void OnPaint (PaintEventArgs e)
+		protected override void OnPaint(PaintEventArgs e)
 		{
 			Graphics g = e.Graphics;
 
-			g.DrawImage(m_Bitmap, new Rectangle(this.AutoScrollPosition.X, this.AutoScrollPosition.Y, (int)(m_Bitmap.Width*Zoom), (int)(m_Bitmap.Height * Zoom)));
+			g.DrawImage(m_Bitmap, new Rectangle(this.AutoScrollPosition.X, this.AutoScrollPosition.Y, (int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom)));
 		}
 
 		private void Form1_Load(object sender, System.EventArgs e)
@@ -405,15 +415,15 @@ namespace CSharpFilters
 
 			openFileDialog.InitialDirectory = _sInitialDirectory;
 			openFileDialog.Filter = "Bitmap files (*.bmp)|*.bmp|Jpeg files (*.jpg)|*.jpg|All valid files (*.bmp/*.jpg)|*.bmp/*.jpg";
-			openFileDialog.FilterIndex = 2 ;
-			openFileDialog.RestoreDirectory = true ;
+			openFileDialog.FilterIndex = 2;
+			openFileDialog.RestoreDirectory = true;
 
-			if(DialogResult.OK == openFileDialog.ShowDialog())
+			if (DialogResult.OK == openFileDialog.ShowDialog())
 			{
 				_sInitialDirectory = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
 				m_Bitmap = (Bitmap)Bitmap.FromFile(openFileDialog.FileName, true);
 				this.AutoScroll = true;
-				this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+				this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 				this.Invalidate();
 			}
 		}
@@ -422,12 +432,12 @@ namespace CSharpFilters
 		{
 			SaveFileDialog saveFileDialog = new SaveFileDialog();
 
-			saveFileDialog.InitialDirectory = "c:\\" ;
-			saveFileDialog.Filter = "Bitmap files (*.bmp)|*.bmp|Jpeg files (*.jpg)|*.jpg|All valid files (*.bmp/*.jpg)|*.bmp/*.jpg" ;
-			saveFileDialog.FilterIndex = 1 ;
-			saveFileDialog.RestoreDirectory = true ;
+			saveFileDialog.InitialDirectory = "c:\\";
+			saveFileDialog.Filter = "Bitmap files (*.bmp)|*.bmp|Jpeg files (*.jpg)|*.jpg|All valid files (*.bmp/*.jpg)|*.bmp/*.jpg";
+			saveFileDialog.FilterIndex = 1;
+			saveFileDialog.RestoreDirectory = true;
 
-			if(DialogResult.OK == saveFileDialog.ShowDialog())
+			if (DialogResult.OK == saveFileDialog.ShowDialog())
 			{
 				m_Bitmap.Save(saveFileDialog.FileName);
 			}
@@ -441,14 +451,14 @@ namespace CSharpFilters
 		private void Filter_Invert(object sender, System.EventArgs e)
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
-			if(BitmapFilter.Invert(m_Bitmap))
+			if (BitmapFilter.Invert(m_Bitmap))
 				this.Invalidate();
 		}
 
 		private void Filter_GrayScale(object sender, System.EventArgs e)
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
-			if(BitmapFilter.GrayScale(m_Bitmap))
+			if (BitmapFilter.GrayScale(m_Bitmap))
 				this.Invalidate();
 		}
 
@@ -472,7 +482,7 @@ namespace CSharpFilters
 			if (DialogResult.OK == dlg.ShowDialog())
 			{
 				m_Undo = (Bitmap)m_Bitmap.Clone();
-				if(BitmapFilter.Brightness(m_Bitmap, dlg.nValue))
+				if (BitmapFilter.Brightness(m_Bitmap, dlg.nValue))
 					this.Invalidate();
 			}
 		}
@@ -485,10 +495,10 @@ namespace CSharpFilters
 			if (DialogResult.OK == dlg.ShowDialog())
 			{
 				m_Undo = (Bitmap)m_Bitmap.Clone();
-				if(BitmapFilter.Contrast(m_Bitmap, (sbyte)dlg.nValue))
+				if (BitmapFilter.Contrast(m_Bitmap, (sbyte)dlg.nValue))
 					this.Invalidate();
 			}
-		
+
 		}
 
 		private void Filter_Gamma(object sender, System.EventArgs e)
@@ -499,7 +509,7 @@ namespace CSharpFilters
 			if (DialogResult.OK == dlg.ShowDialog())
 			{
 				m_Undo = (Bitmap)m_Bitmap.Clone();
-				if(BitmapFilter.Gamma(m_Bitmap, dlg.red, dlg.green, dlg.blue))
+				if (BitmapFilter.Gamma(m_Bitmap, dlg.red, dlg.green, dlg.blue))
 					this.Invalidate();
 			}
 		}
@@ -512,100 +522,100 @@ namespace CSharpFilters
 			if (DialogResult.OK == dlg.ShowDialog())
 			{
 				m_Undo = (Bitmap)m_Bitmap.Clone();
-				if(BitmapFilter.Color(m_Bitmap, dlg.red, dlg.green, dlg.blue))
+				if (BitmapFilter.Color(m_Bitmap, dlg.red, dlg.green, dlg.blue))
 					this.Invalidate();
 			}
-		
+
 		}
 
 		private void OnZoom25(object sender, System.EventArgs e)
 		{
 			Zoom = .25;
-			this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
 
 		private void OnZoom50(object sender, System.EventArgs e)
 		{
 			Zoom = .5;
-			this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
 
 		private void OnZoom100(object sender, System.EventArgs e)
 		{
 			Zoom = 1.0;
-			this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
 
 		private void OnZoom150(object sender, System.EventArgs e)
 		{
 			Zoom = 1.5;
-			this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
 
 		private void OnZoom200(object sender, System.EventArgs e)
 		{
 			Zoom = 2.0;
-			this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
 
 		private void OnZoom300(object sender, System.EventArgs e)
 		{
 			Zoom = 3.0;
-			this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
 
 		private void OnZoom500(object sender, System.EventArgs e)
 		{
 			Zoom = 5;
-			this.AutoScrollMinSize = new Size ((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
 
 		private void OnFilterSmooth(object sender, System.EventArgs e)
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
-			if(BitmapFilter.Smooth(m_Bitmap, 1))
+			if (BitmapFilter.Smooth(m_Bitmap, 1))
 				this.Invalidate();
 		}
 
 		private void OnGaussianBlur(object sender, System.EventArgs e)
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
-			if(BitmapFilter.GaussianBlur(m_Bitmap, 4))
+			if (BitmapFilter.GaussianBlur(m_Bitmap, 4))
 				this.Invalidate();
 		}
 
 		private void OnMeanRemoval(object sender, System.EventArgs e)
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
-			if(BitmapFilter.MeanRemoval(m_Bitmap, 9))
+			if (BitmapFilter.MeanRemoval(m_Bitmap, 9))
 				this.Invalidate();
 		}
 
 		private void OnSharpen(object sender, System.EventArgs e)
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
-			if(BitmapFilter.Sharpen(m_Bitmap, 11))
+			if (BitmapFilter.Sharpen(m_Bitmap, 11))
 				this.Invalidate();
 		}
 
 		private void OnEmbossLaplacian(object sender, System.EventArgs e)
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
-			if(BitmapFilter.EmbossLaplacian(m_Bitmap))
+			if (BitmapFilter.EmbossLaplacian(m_Bitmap))
 				this.Invalidate();
 		}
 
 		private void OnEdgeDetectQuick(object sender, System.EventArgs e)
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
-			if(BitmapFilter.EdgeDetectQuick(m_Bitmap))
+			if (BitmapFilter.EdgeDetectQuick(m_Bitmap))
 				this.Invalidate();
 		}
 
@@ -624,10 +634,10 @@ namespace CSharpFilters
 			if (DialogResult.OK == dlg.ShowDialog())
 			{
 				m_Undo = (Bitmap)m_Bitmap.Clone();
-				if(BitmapFilter.Conv3x3(m_Bitmap, dlg.Matrix))
+				if (BitmapFilter.Conv3x3(m_Bitmap, dlg.Matrix))
 					this.Invalidate();
 			}
-		
+
 		}
 
 		private void OnImageFromText(object sender, System.EventArgs e)
@@ -637,43 +647,50 @@ namespace CSharpFilters
 			if (DialogResult.OK == dlg.ShowDialog())
 			{
 				m_Bitmap = (Bitmap)FontMethods.Render(dlg.sValue);
+				BitmapFilter.GrayToBlack(m_Bitmap, BRIGHT);
 				this.AutoScroll = true;
 				this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 				this.Invalidate();
 			}
 		}
 
-        private void OnImageToTextR1(object sender, System.EventArgs e)
+		private void OnImageToTextR1(object sender, System.EventArgs e)
 		{
-            m_Undo = (Bitmap)m_Bitmap.Clone();
-            BitmapFilter.GrayToBlack(m_Bitmap, 230);
+			m_Undo = (Bitmap)m_Bitmap.Clone();
+			BitmapFilter.GrayToBlack(m_Bitmap, BRIGHT);
 			var arr = FontMethods.ImageToTextR1(m_Bitmap);
-            Bitmap[][] br = new Bitmap[arr.Length][];
-            Bitmap[] cr = new Bitmap[arr.Length];
-            for (int i = 0; i < arr.Length; i++)
+			Bitmap[][] br = new Bitmap[arr.Length][];
+			Bitmap[] cr = new Bitmap[arr.Length];
+			for (int i = 0; i < arr.Length; i++)
 			{
-			    br[i] = FontMethods.ImageToTextR2(arr[i]);
-                cr[i] = FontMethods.JoinBitmap(br[i]);
+				br[i] = FontMethods.ImageToTextR2(arr[i]);
+				cr[i] = FontMethods.JoinBitmap(br[i]);
 			}
-            m_Bitmap = FontMethods.JoinBitmapH(cr);
-            m_Bitmap = br[0][0];
+			m_Bitmap = FontMethods.JoinBitmapH(cr);
+			m_Bitmap = br[0][0];
+			this.AutoScroll = true;
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.Invalidate();
+		}
+
+		private void OnImageToBackBone(object sender, System.EventArgs e)
+		{
+			m_Undo = (Bitmap)m_Bitmap.Clone();
+			FontMethods.ImageToBackBone(m_Bitmap);
 			m_Bitmap = FontMethods.BoundCore(m_Bitmap);
 			this.AutoScroll = true;
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
 
-        private void OnImageToBackBone(object sender, System.EventArgs e)
-        {
-            m_Undo = (Bitmap)m_Bitmap.Clone();
-            BitmapFilter.GrayToBlack(m_Bitmap, 230);
-            var arr = FontMethods.ImageToBackBone(m_Bitmap);
-			m_Bitmap = FontMethods.BoundCore(m_Bitmap);
-			this.AutoScroll = true;
-            this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
-            this.Invalidate();
-        }
-        
+		private void OnAverageSquare(object sender, System.EventArgs e)
+		{
+			//already run OnImageToBackBone
+			double d = FontMethods.AverageSquare(m_Bitmap);
+			Clipboard.SetText(d.ToString());
+			MessageBox.Show(d.ToString());
+		}
+
 	}
 }
 

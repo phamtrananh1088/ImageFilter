@@ -40,10 +40,10 @@ namespace CSharpFilters
                 {
                     memoryGraphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
                     // must not be transparent background 
-                    memoryGraphics.Clear(Color.White);
+                    memoryGraphics.Clear(Color.Black);
 
                     // execute GDI text rendering
-                    TextRenderer.DrawText(memoryGraphics, "嬲", new Font("MS gothic", 24), new Point(0, 0), Color.White, Color.Black);
+                    TextRenderer.DrawText(memoryGraphics, "興", new Font("MS gothic", 24), new Point(0, 0), Color.White, Color.Black);
                 }
 
                 // copy from memory buffer to image
@@ -247,6 +247,44 @@ namespace CSharpFilters
                 }
             }
             return target;
+        }
+        public static bool ImageToBackBone(Bitmap b)
+        {
+            // GDI+ still lies to us - the return format is BGR, NOT RGB.
+            BitmapData bmData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+
+            int stride = bmData.Stride;
+            System.IntPtr Scan0 = bmData.Scan0;
+
+            List<Rectangle> brow = new List<Rectangle>();
+            unsafe
+            {
+                byte* p = (byte*)(void*)Scan0;
+
+                int nOffset = stride - b.Width * 3;
+
+                byte red, green, blue;
+                for (int y = 0; y < b.Height; ++y)
+                {
+                    int fr = 0;
+                    for (int x = 0; x < b.Width; ++x)
+                    {
+                        blue = p[0];
+                        green = p[1];
+                        red = p[2];
+                        if (blue == 0 && green == 0 && red == 0)
+                        {
+                            fr++;
+                        }
+                        p += 3;
+                    }
+                    p += nOffset;
+                }
+            }
+
+            b.UnlockBits(bmData);
+
+            return true;
         }
         private static Bitmap CropBitmap(Bitmap b, Rectangle cropRect)
         {

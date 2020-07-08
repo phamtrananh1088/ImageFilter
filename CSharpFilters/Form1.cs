@@ -50,6 +50,7 @@ namespace CSharpFilters
 		private System.Windows.Forms.MenuItem FilterCustom;
 		private System.Windows.Forms.MenuItem ImageFromText;
         private System.Windows.Forms.MenuItem ImageToTextR1;
+        private System.Windows.Forms.MenuItem ImageToBackBone;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -118,6 +119,7 @@ namespace CSharpFilters
 			this.menuItem6 = new System.Windows.Forms.MenuItem();
             this.ImageFromText = new System.Windows.Forms.MenuItem();
             this.ImageToTextR1 = new System.Windows.Forms.MenuItem();
+            this.ImageToBackBone = new System.Windows.Forms.MenuItem();
 			// 
 			// mainMenu1
 			// 
@@ -341,7 +343,8 @@ namespace CSharpFilters
 			this.menuItem6.Index = 5;
 			this.menuItem6.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																					  this.ImageFromText,
-                                                                                      this.ImageToTextR1});
+                                                                                      this.ImageToTextR1,
+                                                                                      this.ImageToBackBone});
 			this.menuItem6.Text = "Image";
 			// 
 			// ImageFromText
@@ -355,6 +358,12 @@ namespace CSharpFilters
             this.ImageToTextR1.Index = 1;
             this.ImageToTextR1.Text = "ImageToTextR1";
             this.ImageToTextR1.Click += new System.EventHandler(this.OnImageToTextR1);
+            // 
+            // ImageToBackBone
+            // 
+            this.ImageToBackBone.Index = 2;
+            this.ImageToBackBone.Text = "ImageToBackBone";
+            this.ImageToBackBone.Click += new System.EventHandler(this.OnImageToBackBone);
 			// 
 			// Form1
 			// 
@@ -632,7 +641,7 @@ namespace CSharpFilters
         private void OnImageToTextR1(object sender, System.EventArgs e)
 		{
             m_Undo = (Bitmap)m_Bitmap.Clone();
-            if (BitmapFilter.GrayToBlack(m_Bitmap, 230));
+            BitmapFilter.GrayToBlack(m_Bitmap, 230);
 			var arr = FontMethods.ImageToTextR1(m_Bitmap);
             Bitmap[][] br = new Bitmap[arr.Length][];
             Bitmap[] cr = new Bitmap[arr.Length];
@@ -647,6 +656,16 @@ namespace CSharpFilters
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
 		}
+
+        private void OnImageToBackBone(object sender, System.EventArgs e)
+        {
+            m_Undo = (Bitmap)m_Bitmap.Clone();
+            BitmapFilter.GrayToBlack(m_Bitmap, 230);
+            var arr = FontMethods.ImageToBackBone(m_Bitmap);
+            this.AutoScroll = true;
+            this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+            this.Invalidate();
+        }
         
 	}
 }

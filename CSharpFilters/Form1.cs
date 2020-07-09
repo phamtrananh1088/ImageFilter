@@ -667,7 +667,7 @@ namespace CSharpFilters
 				cr[i] = FontMethods.JoinBitmap(br[i]);
 			}
 			m_Bitmap = FontMethods.JoinBitmapH(cr);
-			m_Bitmap = br[0][0];
+			m_Bitmap = br[0][3];
 			this.AutoScroll = true;
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
@@ -687,8 +687,8 @@ namespace CSharpFilters
 		{
 			//already run OnImageToBackBone
 			double[] d = FontMethods.AverageSquare(m_Bitmap);
-            Clipboard.SetText(d[0].ToString() + ":" + d[1].ToString());
-            MessageBox.Show(d[0].ToString() + ":" + d[1].ToString());
+            Clipboard.SetText(d[0].ToString() + ":" + d[1].ToString() + ":" + d[2].ToString());
+            MessageBox.Show(d[0].ToString() + ":" + d[1].ToString() + ":" + d[2].ToString());
 		}
 
 	}

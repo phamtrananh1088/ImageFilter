@@ -97,7 +97,7 @@ namespace CSharpFilters
                         }
                         p += 3;
                     }
-                    p += nOffset;  
+                    p += nOffset;
                 }
                 for (int y = 0; y < b.Height; ++y)
                 {
@@ -436,9 +436,10 @@ namespace CSharpFilters
             int stride = bmData.Stride;
             System.IntPtr Scan0 = bmData.Scan0;
 
-            double sq, sx, sy;
-            sq = sx = sy = 0;
+            double sq, ss, sx, sy, sd;
+            sq = ss = sx = sy = sd = 0;
             sq = (double)(b.Width * (b.Width - 1)) / 2 * b.Height + b.Width * b.Height + (double)(b.Height * (b.Height - 1)) / 2 * b.Width;
+            ss = b.Width*b.Height;
             unsafe
             {
                 byte* p = (byte*)(void*)Scan0;
@@ -459,6 +460,8 @@ namespace CSharpFilters
                                 sx += (x + 1) * (y + 1);
                             if (y >= x)
                                 sy += (x + 1) * (y + 1);
+
+                            sd++;
                         }
                         p += 3;
                     }
@@ -468,7 +471,7 @@ namespace CSharpFilters
 
             b.UnlockBits(bmData);
 
-            return new double[] { sx / sq, sy / sq };
+            return new double[] { sx / sq, sy / sq, sd / ss };
         }
 
         private static bool Converge(int[][] b, int range = 4)

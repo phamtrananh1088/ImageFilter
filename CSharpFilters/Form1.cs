@@ -658,7 +658,7 @@ namespace CSharpFilters
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
 			BitmapFilter.GrayToBlack(m_Bitmap, BRIGHT);
-			var arr = FontMethods.ImageToTextR1(m_Bitmap);
+            Bitmap[] arr = FontMethods.ImageToTextR1(m_Bitmap);
 			Bitmap[][] br = new Bitmap[arr.Length][];
 			Bitmap[] cr = new Bitmap[arr.Length];
 			for (int i = 0; i < arr.Length; i++)
@@ -686,9 +686,9 @@ namespace CSharpFilters
 		private void OnAverageSquare(object sender, System.EventArgs e)
 		{
 			//already run OnImageToBackBone
-			double d = FontMethods.AverageSquare(m_Bitmap);
-			Clipboard.SetText(d.ToString());
-			MessageBox.Show(d.ToString());
+			double[] d = FontMethods.AverageSquare(m_Bitmap);
+            Clipboard.SetText(d[0].ToString() + ":" + d[1].ToString());
+            MessageBox.Show(d[0].ToString() + ":" + d[1].ToString());
 		}
 
 	}

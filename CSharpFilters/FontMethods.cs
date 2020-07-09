@@ -43,7 +43,7 @@ namespace CSharpFilters
                     memoryGraphics.Clear(Color.Black);
 
                     // execute GDI text rendering
-                    TextRenderer.DrawText(memoryGraphics, text, new Font("MS gothic", 24,FontStyle.Bold), new Point(0, 0), Color.White, Color.Black);
+                    TextRenderer.DrawText(memoryGraphics, text, new Font("MS gothic", 24, FontStyle.Bold), new Point(0, 0), Color.White, Color.Black);
                 }
 
                 // copy from memory buffer to image
@@ -83,9 +83,9 @@ namespace CSharpFilters
                 int rx, ry, rw, rh;
                 rx = ry = rw = rh = 0;
                 bool fs = false;
+                int[] fr = new int[b.Height];
                 for (int y = 0; y < b.Height; ++y)
                 {
-                    int fr = 0;
                     for (int x = 0; x < b.Width; ++x)
                     {
                         blue = p[0];
@@ -93,13 +93,16 @@ namespace CSharpFilters
                         red = p[2];
                         if (blue == 0 && green == 0 && red == 0)
                         {
-                            fr ++;
+                            fr[y]++;
                         }
                         p += 3;
                     }
-                    p += nOffset;
-                    //first possition has byte -> start line
-                    if ((!fs) && fr < b.Width)
+                    p += nOffset;  
+                }
+                for (int y = 0; y < b.Height; ++y)
+                {
+                    //first possition has byte -> start row
+                    if ((!fs) && fr[y] < b.Width)
                     {
                         rx = 0;
                         ry = y;
@@ -108,12 +111,24 @@ namespace CSharpFilters
                     }
                     else
                     {
-                        //fisrt possition no byte after has byte -> end line 
-                        if (fs && ((fr == b.Width) || (y + 1 == b.Height)))
+                        //fisrt possition no byte after has byte -> end row 
+                        if (fs && ((fr[y] == b.Width) || (y + 1 == b.Height)))
                         {
-                            rh = y - ry;
+                            rh = y - ry + 1;
                             Rectangle bm = new Rectangle(rx, ry, rw, rh);
                             brow.Add(bm);
+                            if (brow.Count > 1)
+                            {
+                                Rectangle f = brow[brow.Count - 1];
+                                Rectangle l = brow[brow.Count - 2];
+                                //minimum distance between row 4px
+                                if (f.Y + 1 - l.Y - l.Height - 4 < 0)
+                                {
+                                    Rectangle n = new Rectangle(l.X, l.Y, f.Width, l.Height + f.Y + 1 - l.Y);
+                                    brow.RemoveRange(brow.Count - 2, 2);
+                                    brow.Add(n);
+                                }
+                            }
                             rx = ry = rw = rh = 0;
                             fs = false;
                         }
@@ -174,10 +189,10 @@ namespace CSharpFilters
                     }
                     else
                     {
-                        //fisrt possition no byte after has byte -> end clumn 
+                        //fisrt possition no byte after has byte -> end column 
                         if (fs && ((fr[x] == b.Height) || (x + 1 == b.Width)))
                         {
-                            rw = x - rx;
+                            rw = x - rx + 1;
                             Rectangle bm = new Rectangle(rx, ry, rw, rh);
                             brow.Add(bm);
                             if (brow.Count > 1)
@@ -185,9 +200,9 @@ namespace CSharpFilters
                                 Rectangle f = brow[brow.Count - 1];
                                 Rectangle l = brow[brow.Count - 2];
                                 //minimum distance between word 4px
-                                if (f.X - 4 - l.X - l.Width < 0)
+                                if (f.X + 1 - l.X - l.Width - 4 < 0)
                                 {
-                                    Rectangle n = new Rectangle(l.X, l.Y,f.Width + f.X - l.X, l.Height);
+                                    Rectangle n = new Rectangle(l.X, l.Y, f.Width + f.X + 1 - l.X, l.Height);
                                     brow.RemoveRange(brow.Count - 2, 2);
                                     brow.Add(n);
                                 }
@@ -209,7 +224,7 @@ namespace CSharpFilters
             if (ab == null || ab.Length == 0) return null;
             int w = ab.Max(m => m.Width);
             int h = ab.Sum(m => m.Height);
-            Bitmap target = new Bitmap(w, h);
+            Bitmap target = new Bitmap(w, h, PixelFormat.Format24bppRgb);
 
             using (Graphics g = Graphics.FromImage(target))
             {
@@ -231,7 +246,7 @@ namespace CSharpFilters
             if (ab == null || ab.Length == 0) return null;
             int w = ab.Sum(m => m.Width);
             int h = ab.Max(m => m.Height);
-            Bitmap target = new Bitmap(w, h);
+            Bitmap target = new Bitmap(w, h, PixelFormat.Format24bppRgb);
 
             using (Graphics g = Graphics.FromImage(target))
             {
@@ -410,10 +425,10 @@ namespace CSharpFilters
 
             b.UnlockBits(bmData);
             int d = Math.Max(re + 1 - rw, rs + 1 - rn);
-            return FontMethods.CropBitmap(b,new Rectangle(rw, rn, d, d));
+            return FontMethods.CropBitmap(b, new Rectangle(rw, rn, d, d));
         }
 
-        public static double AverageSquare(Bitmap b)
+        public static double[] AverageSquare(Bitmap b)
         {
             // GDI+ still lies to us - the return format is BGR, NOT RGB.
             BitmapData bmData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
@@ -421,9 +436,9 @@ namespace CSharpFilters
             int stride = bmData.Stride;
             System.IntPtr Scan0 = bmData.Scan0;
 
-            double sq, s;
-            sq = s = 0;
-            sq = (double)(b.Width*(b.Width - 1)) / 2 * b.Height + b.Width * b.Height + (double)(b.Height*(b.Height - 1)) / 2 * b.Width;
+            double sq, sx, sy;
+            sq = sx = sy = 0;
+            sq = (double)(b.Width * (b.Width - 1)) / 2 * b.Height + b.Width * b.Height + (double)(b.Height * (b.Height - 1)) / 2 * b.Width;
             unsafe
             {
                 byte* p = (byte*)(void*)Scan0;
@@ -440,7 +455,10 @@ namespace CSharpFilters
                         red = p[2];
                         if (blue == 255 && green == 255 && red == 255)
                         {
-                            s += (x + 1)*(x + 1) * (y +1);
+                            if (x >= y)
+                                sx += (x + 1) * (y + 1);
+                            if (y >= x)
+                                sy += (x + 1) * (y + 1);
                         }
                         p += 3;
                     }
@@ -450,7 +468,7 @@ namespace CSharpFilters
 
             b.UnlockBits(bmData);
 
-            return s / sq;
+            return new double[] { sx / sq, sy / sq };
         }
 
         private static bool Converge(int[][] b, int range = 4)
@@ -462,7 +480,8 @@ namespace CSharpFilters
                 for (int j = 0; j < c.Length; j++)
                 {
                     int x = c[j];
-                    if (x == 1) {
+                    if (x == 1)
+                    {
                         r++;
                     }
                     else
@@ -483,7 +502,7 @@ namespace CSharpFilters
         }
         private static Bitmap CropBitmap(Bitmap b, Rectangle cropRect)
         {
-            Bitmap target = new Bitmap(cropRect.Width, cropRect.Height);
+            Bitmap target = new Bitmap(cropRect.Width, cropRect.Height, PixelFormat.Format24bppRgb);
 
             using (Graphics g = Graphics.FromImage(target))
             {
@@ -498,14 +517,14 @@ namespace CSharpFilters
 
         private static Bitmap[] CropBitmap(Bitmap b, Rectangle[] cropRect)
         {
-            if (cropRect==null || cropRect.Length==0)
+            if (cropRect == null || cropRect.Length == 0)
             {
                 return null;
             }
             Bitmap[] target = new Bitmap[cropRect.Length];
             for (int i = 0; i < cropRect.Length; i++)
             {
-                target[i] = new Bitmap(cropRect[i].Width, cropRect[i].Height);
+                target[i] = new Bitmap(cropRect[i].Width, cropRect[i].Height, PixelFormat.Format24bppRgb);
                 using (Graphics g = Graphics.FromImage(target[i]))
                 {
                     // must not be transparent background 

@@ -658,7 +658,7 @@ namespace CSharpFilters
 		{
 			m_Undo = (Bitmap)m_Bitmap.Clone();
 			BitmapFilter.GrayToBlack(m_Bitmap, BRIGHT);
-            Bitmap[] arr = FontMethods.ImageToTextR1(m_Bitmap);
+			Bitmap[] arr = FontMethods.ImageToTextR1(m_Bitmap);
 			Bitmap[][] br = new Bitmap[arr.Length][];
 			Bitmap[] cr = new Bitmap[arr.Length];
 			for (int i = 0; i < arr.Length; i++)
@@ -667,7 +667,7 @@ namespace CSharpFilters
 				cr[i] = FontMethods.JoinBitmap(br[i]);
 			}
 			m_Bitmap = FontMethods.JoinBitmapH(cr);
-			m_Bitmap = br[0][3];
+			m_Bitmap = br[0][1];
 			this.AutoScroll = true;
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
@@ -687,8 +687,18 @@ namespace CSharpFilters
 		{
 			//already run OnImageToBackBone
 			double[] d = FontMethods.AverageSquare(m_Bitmap);
-            Clipboard.SetText(d[0].ToString() + ":" + d[1].ToString() + ":" + d[2].ToString());
-            MessageBox.Show(d[0].ToString() + ":" + d[1].ToString() + ":" + d[2].ToString());
+			double[][] ad = FontMethods.Margin(m_Bitmap);
+			string mes = d[0].ToString() + ":" + d[1].ToString() + ":" + d[2].ToString()
+				+ ":[" + ad[0][0].ToString() + ":" + ad[0][1].ToString() + "]:"
+				+ ":[" + ad[1][0].ToString() + ":" + ad[1][1].ToString() + "]:"
+				+ ":[" + ad[2][0].ToString() + ":" + ad[2][1].ToString() + "]:"
+				+ ":[" + ad[3][0].ToString() + ":" + ad[3][1].ToString() + "]:"
+				+ ":[" + ad[4][0].ToString() + ":" + ad[4][1].ToString() + "]:"
+				+ ":[" + ad[5][0].ToString() + ":" + ad[5][1].ToString() + "]:"
+				+ ":[" + ad[6][0].ToString() + ":" + ad[6][1].ToString() + "]:"
+				+ ":[" + ad[7][0].ToString() + ":" + ad[7][1].ToString() + "]:";
+			Clipboard.SetText(mes);
+			MessageBox.Show(mes);
 		}
 
 	}

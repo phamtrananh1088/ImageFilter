@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Collections;
 using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
+using System.Collections.Generic;
 
 namespace CSharpFilters
 {
@@ -53,6 +54,8 @@ namespace CSharpFilters
 		private System.Windows.Forms.MenuItem ImageToTextR1;
 		private System.Windows.Forms.MenuItem ImageToBackBone;
 		private System.Windows.Forms.MenuItem AverageSquare;
+		private System.Windows.Forms.MenuItem Rank;
+		private System.Windows.Forms.MenuItem Dictionary;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -123,6 +126,9 @@ namespace CSharpFilters
 			this.ImageToTextR1 = new System.Windows.Forms.MenuItem();
 			this.ImageToBackBone = new System.Windows.Forms.MenuItem();
 			this.AverageSquare = new System.Windows.Forms.MenuItem();
+			this.Rank = new System.Windows.Forms.MenuItem();
+			this.Dictionary = new System.Windows.Forms.MenuItem();
+
 			// 
 			// mainMenu1
 			// 
@@ -348,7 +354,9 @@ namespace CSharpFilters
 																					  this.ImageFromText,
 																					  this.ImageToTextR1,
 																					  this.ImageToBackBone,
-																					  this.AverageSquare});
+																					  this.AverageSquare,
+                                                                                      this.Rank,
+                                                                                      this.Dictionary});
 			this.menuItem6.Text = "Image";
 			// 
 			// ImageFromText
@@ -374,6 +382,18 @@ namespace CSharpFilters
 			this.AverageSquare.Index = 3;
 			this.AverageSquare.Text = "AverageSquare";
 			this.AverageSquare.Click += new System.EventHandler(this.OnAverageSquare);
+			// 
+			// Rank
+			// 
+			this.Rank.Index = 4;
+			this.Rank.Text = "Rank";
+			this.Rank.Click += new System.EventHandler(this.OnRank);
+			// 
+			// Dictionary
+			// 
+			this.Dictionary.Index = 5;
+			this.Dictionary.Text = "Dictionary";
+			this.Dictionary.Click += new System.EventHandler(this.OnDictionary);
 			// 
 			// Form1
 			// 
@@ -643,7 +663,7 @@ namespace CSharpFilters
 		private void OnImageFromText(object sender, System.EventArgs e)
 		{
 			KanjiInput dlg = new KanjiInput();
-			dlg.sValue = "��";
+			dlg.sValue = "—ˆ";
 			if (DialogResult.OK == dlg.ShowDialog())
 			{
 				m_Bitmap = (Bitmap)FontMethods.Render(dlg.sValue);
@@ -667,7 +687,7 @@ namespace CSharpFilters
 				cr[i] = FontMethods.JoinBitmap(br[i]);
 			}
 			m_Bitmap = FontMethods.JoinBitmapH(cr);
-			m_Bitmap = br[0][1];
+			m_Bitmap = br[0][7];
 			this.AutoScroll = true;
 			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
 			this.Invalidate();
@@ -685,22 +705,121 @@ namespace CSharpFilters
 
 		private void OnAverageSquare(object sender, System.EventArgs e)
 		{
+			m_Undo = FontMethods.BoundCore(m_Undo);
+			int[] fra = FontMethods.Fragment(m_Undo);
 			//already run OnImageToBackBone
 			double[] d = FontMethods.AverageSquare(m_Bitmap);
 			double[][] ad = FontMethods.Margin(m_Bitmap);
 			string mes = d[0].ToString() + ":" + d[1].ToString() + ":" + d[2].ToString()
-				+ ":[" + ad[0][0].ToString() + ":" + ad[0][1].ToString() + "]:"
-				+ ":[" + ad[1][0].ToString() + ":" + ad[1][1].ToString() + "]:"
-				+ ":[" + ad[2][0].ToString() + ":" + ad[2][1].ToString() + "]:"
-				+ ":[" + ad[3][0].ToString() + ":" + ad[3][1].ToString() + "]:"
-				+ ":[" + ad[4][0].ToString() + ":" + ad[4][1].ToString() + "]:"
-				+ ":[" + ad[5][0].ToString() + ":" + ad[5][1].ToString() + "]:"
-				+ ":[" + ad[6][0].ToString() + ":" + ad[6][1].ToString() + "]:"
-				+ ":[" + ad[7][0].ToString() + ":" + ad[7][1].ToString() + "]:";
+				+ ":[" + ad[0][0].ToString("0.00000") + ":" + ad[0][1].ToString("0.00000") + "]"
+				+ ":[" + ad[1][0].ToString("0.00000") + ":" + ad[1][1].ToString("0.00000") + "]"
+				+ ":[" + ad[2][0].ToString("0.00000") + ":" + ad[2][1].ToString("0.00000") + "]"
+				+ ":[" + ad[3][0].ToString("0.00000") + ":" + ad[3][1].ToString("0.00000") + "]"
+				+ ":[" + ad[4][0].ToString("0.00000") + ":" + ad[4][1].ToString("0.00000") + "]"
+				+ ":[" + ad[5][0].ToString("0.00000") + ":" + ad[5][1].ToString("0.00000") + "]"
+				+ ":[" + ad[6][0].ToString("0.00000") + ":" + ad[6][1].ToString("0.00000") + "]"
+				+ ":[" + ad[7][0].ToString("0.00000") + ":" + ad[7][1].ToString("0.00000") + "]"
+				+ ":" + String.Join(",", fra);
 			Clipboard.SetText(mes);
 			MessageBox.Show(mes);
 		}
+		private void OnRank(object sender, System.EventArgs e)
+		{
+			m_Undo = (Bitmap)m_Bitmap.Clone();
+			BitmapFilter.GrayToBlack(m_Bitmap, BRIGHT);
+			Bitmap[] arr = FontMethods.ImageToTextR1(m_Bitmap);
+			Bitmap[][] br = new Bitmap[arr.Length][];
+			Bitmap[] cr = new Bitmap[arr.Length];
+			for (int i = 0; i < arr.Length; i++)
+			{
+				br[i] = FontMethods.ImageToTextR2(arr[i]);
+				cr[i] = FontMethods.JoinBitmap(br[i]);
+			}
+			m_Bitmap = FontMethods.JoinBitmapH(cr);
+			this.AutoScroll = true;
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.Invalidate();
 
+			Bitmap[][] brcop = new Bitmap[arr.Length][];
+			List<ABC> listABC = new List<ABC>();
+			for (int i = 0; i < arr.Length; i++)
+			{
+				Bitmap[] bbcop = new Bitmap[br[i].Length];
+				for (int j = 0; j < br[i].Length; j++)
+				{
+					bbcop[j] = (Bitmap)br[i][j].Clone();
+					bbcop[j] = FontMethods.BoundCore(bbcop[j]);
+					int[] fra = FontMethods.Fragment(bbcop[j]);
+
+					FontMethods.ImageToBackBone(br[i][j]);
+					br[i][j] = FontMethods.BoundCore(br[i][j]);
+					double[] d = FontMethods.AverageSquare(br[i][j]);
+					double[][] ad = FontMethods.Margin(br[i][j]);
+					ABC strABC = new ABC();
+					strABC.AverageSquare = d;
+					strABC.Margin = ad;
+					strABC.Fragment = fra;
+					listABC.Add(strABC);
+				}
+			}
+			string mes = String.Join("\n", listABC);
+			Clipboard.SetText(mes);
+			MessageBox.Show(mes);
+		}
+		private void OnDictionary(object sender, System.EventArgs e)
+		{
+			string[] arrdic = new String[] { "田", "字", "奉", "膂", "雪", "こ", "や", "至", "一", "雪", "雪", "だ", "や", "ほ", "’", "ん", "と", "や" };
+			Bitmap[] br = new Bitmap[arrdic.Length];
+			Bitmap[] brcop = new Bitmap[arrdic.Length];
+			List<ABC> listABC = new List<ABC>();
+
+			for (int i = 0; i < arrdic.Length; i++)
+			{
+				br[i] = (Bitmap)FontMethods.Render(arrdic[i]);
+				BitmapFilter.GrayToBlack(br[i], BRIGHT);
+				brcop[i] = (Bitmap)br[i].Clone();
+				brcop[i] = FontMethods.BoundCore(brcop[i]);
+				int[] fra = FontMethods.Fragment(brcop[i]);
+
+				FontMethods.ImageToBackBone(br[i]);
+				br[i] = FontMethods.BoundCore(br[i]);
+				double[] d = FontMethods.AverageSquare(br[i]);
+				double[][] ad = FontMethods.Margin(br[i]);
+				ABC strABC = new ABC();
+				strABC.AverageSquare = d;
+				strABC.Margin = ad;
+				strABC.Fragment = fra;
+				listABC.Add(strABC);
+			}
+
+			m_Bitmap = FontMethods.JoinBitmap(brcop);
+			this.AutoScroll = true;
+			this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+			this.Invalidate();
+
+			string mes = String.Join("\n", listABC);
+			Clipboard.SetText(mes);
+			MessageBox.Show(mes);
+		}
+		struct ABC
+		{
+			internal double[] AverageSquare;
+			internal double[][] Margin;
+			internal int[] Fragment;
+			public override string ToString()
+			{
+				return AverageSquare[0].ToString() + ":" + AverageSquare[1].ToString() + ":" + AverageSquare[2].ToString()
+						+ ":[" + Margin[0][0].ToString("0.00000") + ":" + Margin[0][1].ToString("0.00000") + "]"
+						+ ":[" + Margin[1][0].ToString("0.00000") + ":" + Margin[1][1].ToString("0.00000") + "]"
+						+ ":[" + Margin[2][0].ToString("0.00000") + ":" + Margin[2][1].ToString("0.00000") + "]"
+						+ ":[" + Margin[3][0].ToString("0.00000") + ":" + Margin[3][1].ToString("0.00000") + "]"
+						+ ":[" + Margin[4][0].ToString("0.00000") + ":" + Margin[4][1].ToString("0.00000") + "]"
+						+ ":[" + Margin[5][0].ToString("0.00000") + ":" + Margin[5][1].ToString("0.00000") + "]"
+						+ ":[" + Margin[6][0].ToString("0.00000") + ":" + Margin[6][1].ToString("0.00000") + "]"
+						+ ":[" + Margin[7][0].ToString("0.00000") + ":" + Margin[7][1].ToString("0.00000") + "]"
+						+ ":" + String.Join(",", Fragment);
+			}
+		}
 	}
 }
 

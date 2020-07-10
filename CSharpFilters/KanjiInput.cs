@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Drawing;
 using System.Collections;
 using System.ComponentModel;
@@ -70,17 +70,17 @@ namespace CSharpFilters
 			// 
 			// OK
 			// 
-			this.OK.Location = new System.Drawing.Point(18, 71);
+			this.OK.Location = new System.Drawing.Point(22, 89);
 			this.OK.Name = "OK";
-			this.OK.Size = new System.Drawing.Size(75, 21);
+			this.OK.Size = new System.Drawing.Size(90, 26);
 			this.OK.TabIndex = 0;
 			this.OK.Text = "OK";
 			// 
 			// Cancel
 			// 
-			this.Cancel.Location = new System.Drawing.Point(106, 71);
+			this.Cancel.Location = new System.Drawing.Point(127, 89);
 			this.Cancel.Name = "Cancel";
-			this.Cancel.Size = new System.Drawing.Size(75, 21);
+			this.Cancel.Size = new System.Drawing.Size(90, 26);
 			this.Cancel.TabIndex = 1;
 			this.Cancel.Text = "Cancel";
 			// 
@@ -88,24 +88,25 @@ namespace CSharpFilters
 			// 
 			this.Value.Font = new System.Drawing.Font("MS Gothic", 18F);
 			this.Value.ImeMode = System.Windows.Forms.ImeMode.Hiragana;
-			this.Value.Location = new System.Drawing.Point(80, 15);
+			this.Value.Location = new System.Drawing.Point(96, 19);
 			this.Value.Multiline = true;
 			this.Value.Name = "Value";
-			this.Value.Size = new System.Drawing.Size(100, 37);
+			this.Value.Size = new System.Drawing.Size(120, 46);
 			this.Value.TabIndex = 2;
 			// 
 			// label1
 			// 
-			this.label1.Location = new System.Drawing.Point(16, 15);
+			this.label1.Font = new System.Drawing.Font("MS Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.label1.Location = new System.Drawing.Point(19, 19);
 			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(56, 21);
+			this.label1.Size = new System.Drawing.Size(67, 26);
 			this.label1.TabIndex = 3;
-			this.label1.Text = "Š¿Žš";
+			this.label1.Text = "æ¼¢å­—";
 			// 
 			// KanjiInput
 			// 
 			this.AcceptButton = this.OK;
-			this.AutoScaleBaseSize = new System.Drawing.Size(5, 12);
+			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.ClientSize = new System.Drawing.Size(200, 104);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.Value);

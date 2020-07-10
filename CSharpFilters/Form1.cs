@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CSharpFilters
 {
@@ -56,6 +57,7 @@ namespace CSharpFilters
 		private System.Windows.Forms.MenuItem AverageSquare;
 		private System.Windows.Forms.MenuItem Rank;
 		private System.Windows.Forms.MenuItem Dictionary;
+		private System.Windows.Forms.MenuItem Synthetic;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -128,7 +130,7 @@ namespace CSharpFilters
 			this.AverageSquare = new System.Windows.Forms.MenuItem();
 			this.Rank = new System.Windows.Forms.MenuItem();
 			this.Dictionary = new System.Windows.Forms.MenuItem();
-
+			this.Synthetic = new System.Windows.Forms.MenuItem();
 			// 
 			// mainMenu1
 			// 
@@ -356,7 +358,8 @@ namespace CSharpFilters
 																					  this.ImageToBackBone,
 																					  this.AverageSquare,
                                                                                       this.Rank,
-                                                                                      this.Dictionary});
+                                                                                      this.Dictionary,
+																					  this.Synthetic});
 			this.menuItem6.Text = "Image";
 			// 
 			// ImageFromText
@@ -394,6 +397,12 @@ namespace CSharpFilters
 			this.Dictionary.Index = 5;
 			this.Dictionary.Text = "Dictionary";
 			this.Dictionary.Click += new System.EventHandler(this.OnDictionary);
+			// 
+			// Synthetic
+			// 
+			this.Synthetic.Index = 6;
+			this.Synthetic.Text = "Synthetic";
+			this.Synthetic.Click += new System.EventHandler(this.OnSynthetic);
 			// 
 			// Form1
 			// 
@@ -663,7 +672,7 @@ namespace CSharpFilters
 		private void OnImageFromText(object sender, System.EventArgs e)
 		{
 			KanjiInput dlg = new KanjiInput();
-			dlg.sValue = "—ˆ";
+			dlg.sValue = "田";
 			if (DialogResult.OK == dlg.ShowDialog())
 			{
 				m_Bitmap = (Bitmap)FontMethods.Render(dlg.sValue);
@@ -751,12 +760,13 @@ namespace CSharpFilters
 					bbcop[j] = FontMethods.BoundCore(bbcop[j]);
 					int[] fra = FontMethods.Fragment(bbcop[j]);
 
-					FontMethods.ImageToBackBone(br[i][j]);
+					//FontMethods.ImageToBackBone(br[i][j]);
 					br[i][j] = FontMethods.BoundCore(br[i][j]);
 					double[] d = FontMethods.AverageSquare(br[i][j]);
 					double[][] ad = FontMethods.Margin(br[i][j]);
 					ABC strABC = new ABC();
 					strABC.AverageSquare = d;
+					strABC.ProportionSquare = strABC.AverageSquare[1] == 0 ? 0 : strABC.AverageSquare[0] / strABC.AverageSquare[1];
 					strABC.Margin = ad;
 					strABC.Fragment = fra;
 					listABC.Add(strABC);
@@ -781,12 +791,14 @@ namespace CSharpFilters
 				brcop[i] = FontMethods.BoundCore(brcop[i]);
 				int[] fra = FontMethods.Fragment(brcop[i]);
 
-				FontMethods.ImageToBackBone(br[i]);
+				//FontMethods.ImageToBackBone(br[i]);
 				br[i] = FontMethods.BoundCore(br[i]);
 				double[] d = FontMethods.AverageSquare(br[i]);
 				double[][] ad = FontMethods.Margin(br[i]);
 				ABC strABC = new ABC();
+				strABC.KEY = arrdic[i];
 				strABC.AverageSquare = d;
+				strABC.ProportionSquare = strABC.AverageSquare[1] == 0 ? 0 : strABC.AverageSquare[0] / strABC.AverageSquare[1];
 				strABC.Margin = ad;
 				strABC.Fragment = fra;
 				listABC.Add(strABC);
@@ -801,14 +813,165 @@ namespace CSharpFilters
 			Clipboard.SetText(mes);
 			MessageBox.Show(mes);
 		}
+
+		private void OnSynthetic(object sender, System.EventArgs e)
+		{
+			List<ABC> des = new List<ABC>();
+			List<ABC> predic = new List<ABC>();
+
+			int im = 0;
+			if (im == 0)
+			{
+				string[] arrdic = new String[] { "田", "字", "奉", "膂", "雪", "こ", "や", "至", "一", "だ", "ほ", "’", "ん", "と" };
+				Bitmap[] br = new Bitmap[arrdic.Length];
+				Bitmap[] brcop = new Bitmap[arrdic.Length];
+				List<ABC> listABC = new List<ABC>();
+
+				for (int i = 0; i < arrdic.Length; i++)
+				{
+					br[i] = (Bitmap)FontMethods.Render(arrdic[i]);
+					BitmapFilter.GrayToBlack(br[i], BRIGHT);
+					brcop[i] = (Bitmap)br[i].Clone();
+					brcop[i] = FontMethods.BoundCore(brcop[i]);
+					int[] fra = FontMethods.Fragment(brcop[i]);
+
+					//FontMethods.ImageToBackBone(br[i]);
+					br[i] = FontMethods.BoundCore(br[i]);
+					double[] d = FontMethods.AverageSquare(br[i]);
+					double[][] ad = FontMethods.Margin(br[i]);
+					ABC strABC = new ABC();
+					strABC.KEY = arrdic[i];
+					strABC.AverageSquare = d;
+					strABC.ProportionSquare = strABC.AverageSquare[1] == 0 ? 0 : strABC.AverageSquare[0] / strABC.AverageSquare[1];
+					strABC.Margin = ad;
+					strABC.Fragment = fra;
+					listABC.Add(strABC);
+				}
+				predic = listABC;
+			}
+
+			im = 1;
+			if (im == 1)
+			{
+				m_Undo = (Bitmap)m_Bitmap.Clone();
+				BitmapFilter.GrayToBlack(m_Bitmap, BRIGHT);
+				Bitmap[] arr = FontMethods.ImageToTextR1(m_Bitmap);
+				Bitmap[][] br = new Bitmap[arr.Length][];
+				Bitmap[] cr = new Bitmap[arr.Length];
+				for (int i = 0; i < arr.Length; i++)
+				{
+					br[i] = FontMethods.ImageToTextR2(arr[i]);
+					cr[i] = FontMethods.JoinBitmap(br[i]);
+				}
+				m_Bitmap = FontMethods.JoinBitmapH(cr);
+				this.AutoScroll = true;
+				this.AutoScrollMinSize = new Size((int)(m_Bitmap.Width * Zoom), (int)(m_Bitmap.Height * Zoom));
+				this.Invalidate();
+
+				Bitmap[][] brcop = new Bitmap[arr.Length][];
+				List<ABC> listABC = new List<ABC>();
+				for (int i = 0; i < arr.Length; i++)
+				{
+					Bitmap[] bbcop = new Bitmap[br[i].Length];
+					for (int j = 0; j < br[i].Length; j++)
+					{
+						bbcop[j] = (Bitmap)br[i][j].Clone();
+						bbcop[j] = FontMethods.BoundCore(bbcop[j]);
+						int[] fra = FontMethods.Fragment(bbcop[j]);
+
+						//FontMethods.ImageToBackBone(br[i][j]);
+						br[i][j] = FontMethods.BoundCore(br[i][j]);
+						double[] d = FontMethods.AverageSquare(br[i][j]);
+						double[][] ad = FontMethods.Margin(br[i][j]);
+						ABC strABC = new ABC();
+						strABC.AverageSquare = d;
+						strABC.ProportionSquare = strABC.AverageSquare[1] == 0 ? 0 : strABC.AverageSquare[0] / strABC.AverageSquare[1];
+						strABC.Margin = ad;
+						strABC.Fragment = fra;
+						listABC.Add(strABC);
+					}
+				}
+				des = listABC;
+			}
+			FncSynthetic(des, predic);
+		}
+
+		private void FncSynthetic(List<ABC> des, List<ABC> predic)
+		{
+			const double ACCURACY = 0.8;
+			int l = des.Count;
+			Dictionary<string, int[]>[] dicKEY = new Dictionary<string, int[]>[des.Count];
+			for (int i = 0; i < l; i++)
+			{
+				dicKEY[i] = new Dictionary<string, int[]>();
+				for (int j = 0; j < predic.Count; j++)
+				{
+					dicKEY[i].Add(predic[j].KEY, new int[100]);
+				}
+			}
+
+			for (int i = 0; i < l; i++)
+			{
+				ABC d = des[i];
+				ABC[] range = d.Clone(ACCURACY);
+				predic.Where(p => p.AverageSquare[0] < range[0].AverageSquare[0] && p.AverageSquare[0] > range[1].AverageSquare[0]).ToList().ForEach(f => dicKEY[i][f.KEY][0]++);
+				predic.Where(p => p.AverageSquare[1] < range[0].AverageSquare[1] && p.AverageSquare[1] > range[1].AverageSquare[1]).ToList().ForEach(f => dicKEY[i][f.KEY][1]++);
+				predic.Where(p => p.AverageSquare[2] < range[0].AverageSquare[2] && p.AverageSquare[2] > range[1].AverageSquare[2]).ToList().ForEach(f => dicKEY[i][f.KEY][2]++);
+				predic.Where(p => p.ProportionSquare < range[0].ProportionSquare && p.ProportionSquare > range[1].ProportionSquare).ToList().ForEach(f => dicKEY[i][f.KEY][3]++);
+				predic.Where(p => p.Margin[0][0] < range[0].Margin[0][0] && p.Margin[0][0] > range[1].Margin[0][0] && p.Margin[0][1] < range[0].Margin[0][1] && p.Margin[0][1] > range[1].Margin[0][1]).ToList().ForEach(f => dicKEY[i][f.KEY][10]++);
+				predic.Where(p => p.Margin[1][0] < range[0].Margin[1][0] && p.Margin[1][0] > range[1].Margin[1][0] && p.Margin[1][1] < range[0].Margin[1][1] && p.Margin[1][1] > range[1].Margin[1][1]).ToList().ForEach(f => dicKEY[i][f.KEY][11]++);
+				predic.Where(p => p.Margin[2][0] < range[0].Margin[2][0] && p.Margin[2][0] > range[1].Margin[2][0] && p.Margin[2][1] < range[0].Margin[2][1] && p.Margin[2][1] > range[1].Margin[2][1]).ToList().ForEach(f => dicKEY[i][f.KEY][12]++);
+				predic.Where(p => p.Margin[3][0] < range[0].Margin[3][0] && p.Margin[3][0] > range[1].Margin[3][0] && p.Margin[3][1] < range[0].Margin[3][1] && p.Margin[3][1] > range[1].Margin[3][1]).ToList().ForEach(f => dicKEY[i][f.KEY][13]++);
+				predic.Where(p => p.Margin[4][0] < range[0].Margin[4][0] && p.Margin[4][0] > range[1].Margin[4][0] && p.Margin[4][1] < range[0].Margin[4][1] && p.Margin[4][1] > range[1].Margin[4][1]).ToList().ForEach(f => dicKEY[i][f.KEY][14]++);
+				predic.Where(p => p.Margin[5][0] < range[0].Margin[5][0] && p.Margin[5][0] > range[1].Margin[5][0] && p.Margin[5][1] < range[0].Margin[5][1] && p.Margin[5][1] > range[1].Margin[5][1]).ToList().ForEach(f => dicKEY[i][f.KEY][15]++);
+				predic.Where(p => p.Margin[6][0] < range[0].Margin[6][0] && p.Margin[6][0] > range[1].Margin[6][0] && p.Margin[6][1] < range[0].Margin[6][1] && p.Margin[6][1] > range[1].Margin[6][1]).ToList().ForEach(f => dicKEY[i][f.KEY][16]++);
+				predic.Where(p => p.Margin[7][0] < range[0].Margin[7][0] && p.Margin[7][0] > range[1].Margin[7][0] && p.Margin[7][1] < range[0].Margin[7][1] && p.Margin[7][1] > range[1].Margin[7][1]).ToList().ForEach(f => dicKEY[i][f.KEY][17]++);
+				predic.Where(p => p.Fragment.Any(q => d.Fragment.Any(r => r == q))).ToList().ForEach(f => dicKEY[i][f.KEY][31]++);
+				predic.Where(p =>
+								{
+									int ccc = 0;
+									int same = -1;
+									for (int im = 0; im < p.Fragment.Length; im++)
+									{
+										//exclude dupplicate
+										if (p.Fragment[im] != same && d.Fragment.Contains(p.Fragment[im]))
+										{
+											ccc++;
+											same = p.Fragment[im];
+										}
+									}
+									return ccc >= 2;
+								}).ToList().ForEach(f => dicKEY[i][f.KEY][32]++);
+			}
+			List<string> listS = new List<string>();
+
+			for (int i = 0; i < l; i++)
+			{
+				var items = from pair in dicKEY[i]
+							where pair.Value.Sum() > 0
+							orderby pair.Value[32] descending, pair.Value[31] descending, pair.Value[0] + pair.Value[1] + pair.Value[3] descending, pair.Value.Sum() descending
+							select pair;
+				List<string> listF = new List<string>();
+				foreach (KeyValuePair<string, int[]> pair in items)
+				{
+					listF.Add(String.Format("{0},{1}", pair.Key, pair.Value.Sum()));
+				}
+				listS.Add(String.Join(":", listF));
+			}
+			string mes = String.Join("\n", listS);
+			Clipboard.SetText(mes);
+			MessageBox.Show(mes);
+		}
 		struct ABC
 		{
+			internal string KEY;
 			internal double[] AverageSquare;
 			internal double[][] Margin;
 			internal int[] Fragment;
+			internal double ProportionSquare;
 			public override string ToString()
 			{
-				return AverageSquare[0].ToString() + ":" + AverageSquare[1].ToString() + ":" + AverageSquare[2].ToString()
+				return AverageSquare[0].ToString("0.00000") + ":" + AverageSquare[1].ToString("0.00000") + ":" + AverageSquare[2].ToString("0.00000") + ":" + ProportionSquare.ToString("0.00000")
 						+ ":[" + Margin[0][0].ToString("0.00000") + ":" + Margin[0][1].ToString("0.00000") + "]"
 						+ ":[" + Margin[1][0].ToString("0.00000") + ":" + Margin[1][1].ToString("0.00000") + "]"
 						+ ":[" + Margin[2][0].ToString("0.00000") + ":" + Margin[2][1].ToString("0.00000") + "]"
@@ -818,6 +981,37 @@ namespace CSharpFilters
 						+ ":[" + Margin[6][0].ToString("0.00000") + ":" + Margin[6][1].ToString("0.00000") + "]"
 						+ ":[" + Margin[7][0].ToString("0.00000") + ":" + Margin[7][1].ToString("0.00000") + "]"
 						+ ":" + String.Join(",", Fragment);
+			}
+
+			public ABC[] Clone(double ACCURACY)
+			{
+				ABC c = new ABC();
+				ABC d = new ABC();
+				c.AverageSquare = new double[this.AverageSquare.Length];
+				d.AverageSquare = new double[this.AverageSquare.Length];
+				c.Fragment = new int[this.Fragment.Length];
+				d.Fragment = new int[this.Fragment.Length];
+				c.Margin = new double[this.Margin.Length][];
+				d.Margin = new double[this.Margin.Length][];
+				for (int i = 0; i < this.AverageSquare.Length; i++)
+				{
+					c.AverageSquare[i] = this.AverageSquare[i] * (2 - ACCURACY);
+					d.AverageSquare[i] = this.AverageSquare[i] * ACCURACY;
+				}
+				c.ProportionSquare = this.ProportionSquare * (2 - ACCURACY);
+				d.ProportionSquare = this.ProportionSquare * ACCURACY;
+				for (int i = 0; i < this.Margin.Length; i++)
+				{
+					c.Margin[i] = new double[] { this.Margin[i][0] * (2 - ACCURACY), this.Margin[i][1] * (2 - ACCURACY) };
+					d.Margin[i] = new double[] { this.Margin[i][0] * ACCURACY, this.Margin[i][1] * ACCURACY };
+				}
+
+				for (int i = 0; i < this.Fragment.Length; i++)
+				{
+					c.Fragment[i] = this.Fragment[i];
+					d.Fragment[i] = this.Fragment[i];
+				}
+				return new ABC[] { c, d };
 			}
 		}
 	}

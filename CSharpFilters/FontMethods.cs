@@ -428,7 +428,7 @@ namespace CSharpFilters
 			return FontMethods.CropBitmap(b, new Rectangle(rw, rn, d, d));
 		}
 
-		public static double[][] Margin(Bitmap b)
+		public static double[][] Margin(Bitmap b, bool remain = false)
 		{
 			// GDI+ still lies to us - the return format is BGR, NOT RGB.
 			BitmapData bmData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
@@ -557,22 +557,25 @@ namespace CSharpFilters
 			}
 
 			b.UnlockBits(bmData);
-			rw[0] = rw[0] / b.Width;
-			rn[0] = rn[0] / b.Width;
-			re[0] = re[0] / b.Width;
-			rs[0] = rs[0] / b.Width;
-			rwn[0] = rwn[0] / b.Width;
-			rne[0] = rne[0] / b.Width;
-			res[0] = res[0] / b.Width;
-			rsw[0] = rsw[0] / b.Width;
-			rw[1] = rw[1] / b.Height;
-			rn[1] = rn[1] / b.Height;
-			re[1] = re[1] / b.Height;
-			rs[1] = rs[1] / b.Height;
-			rwn[1] = rwn[1] / b.Height;
-			rne[1] = rne[1] / b.Height;
-			res[1] = res[1] / b.Height;
-			rsw[1] = rsw[1] / b.Height;
+			if (!remain)
+			{
+				rw[0] = rw[0] / b.Width;
+				rn[0] = rn[0] / b.Width;
+				re[0] = re[0] / b.Width;
+				rs[0] = rs[0] / b.Width;
+				rwn[0] = rwn[0] / b.Width;
+				rne[0] = rne[0] / b.Width;
+				res[0] = res[0] / b.Width;
+				rsw[0] = rsw[0] / b.Width;
+				rw[1] = rw[1] / b.Height;
+				rn[1] = rn[1] / b.Height;
+				re[1] = re[1] / b.Height;
+				rs[1] = rs[1] / b.Height;
+				rwn[1] = rwn[1] / b.Height;
+				rne[1] = rne[1] / b.Height;
+				res[1] = res[1] / b.Height;
+				rsw[1] = rsw[1] / b.Height;
+			}
 			return new double[][] { rw, rn, re, rs, rwn, rne, res, rsw };
 		}
 
@@ -624,6 +627,12 @@ namespace CSharpFilters
 
 		public static int[] Fragment(Bitmap b)
 		{
+			double[] rw, rn, re, rs;
+			double[][] ad = FontMethods.Margin(b, true);
+			rw = ad[0];
+			rn = ad[1];
+			re = ad[2];
+			rs = ad[3];
 			// use bitmap before backbone
 			// GDI+ still lies to us - the return format is BGR, NOT RGB.
 			BitmapData bmData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
@@ -666,7 +675,7 @@ namespace CSharpFilters
 
 			b.UnlockBits(bmData);
 
-			for (int x = b.Width / 6; x < 5 * b.Width / 6; ++x)
+			for (int x = Math.Max(b.Width / 6, (int)rw[0]); x < Math.Min(5 * b.Width / 6,(int)re[0]); ++x)
 			{
 				if (mr[x].Sum() <= 2)
 				{
@@ -689,7 +698,7 @@ namespace CSharpFilters
 				}
 			}
 
-			for (int y = b.Height / 6; y < 5 * b.Height / 6; ++y)
+			for (int y = Math.Max(b.Height / 6,(int)rn[1]); y < Math.Min(5 * b.Height / 6,(int)rs[1]); ++y)
 			{
 				if (fr[y].Sum() <= 2)
 				{

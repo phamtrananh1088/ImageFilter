@@ -28,7 +28,7 @@ namespace CSharpFilters
 		public static Image Render(string text = "来")
 		{
 			// create the final image to render into
-			var image = new Bitmap(40, 40, PixelFormat.Format24bppRgb);
+			var image = new Bitmap(50, 50, PixelFormat.Format24bppRgb);
 
 			// create memory buffer from desktop handle that supports alpha channel
 			IntPtr dib;
@@ -38,12 +38,15 @@ namespace CSharpFilters
 				// create memory buffer graphics to use for HTML rendering
 				using (var memoryGraphics = Graphics.FromHdc(memoryHdc))
 				{
-					memoryGraphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+					memoryGraphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixel;
+					//memoryGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 					// must not be transparent background 
 					memoryGraphics.Clear(Color.Black);
 
 					// execute GDI text rendering
-					TextRenderer.DrawText(memoryGraphics, text, new Font("MS gothic", 24, FontStyle.Bold), new Point(0, 0), Color.White, Color.Black);
+					TextRenderer.DrawText(memoryGraphics, text, new Font("Yu Gothic UI", 30, FontStyle.Bold), new Point(0, 0), Color.White, Color.Black);
+					//memoryGraphics.DrawString(text, new Font("MS gothic", 24), new SolidBrush(Color.White), new PointF(0, 0));
+					//memoryGraphics.DrawString(text, new Font("Yu Gothic UI", 30, FontStyle.Bold), new SolidBrush(Color.White), new PointF(0, 0));
 				}
 
 				// copy from memory buffer to image
@@ -428,6 +431,7 @@ namespace CSharpFilters
 			return FontMethods.CropBitmap(b, new Rectangle(rw, rn, d, d));
 		}
 
+		//not applicable, less accurate
 		public static double[][] Margin(Bitmap b, bool remain = false)
 		{
 			// GDI+ still lies to us - the return format is BGR, NOT RGB.
@@ -579,6 +583,7 @@ namespace CSharpFilters
 			return new double[][] { rw, rn, re, rs, rwn, rne, res, rsw };
 		}
 
+		//not applicable, not accurate
 		public static double[] AverageSquare(Bitmap b)
 		{
 			// GDI+ still lies to us - the return format is BGR, NOT RGB.
@@ -640,6 +645,7 @@ namespace CSharpFilters
 			int stride = bmData.Stride;
 			System.IntPtr Scan0 = bmData.Scan0;
 			List<int> r = new List<int>();
+			List<int> r1 = new List<int>();
 			int[][] mr = new int[b.Width][];
 			int[][] fr = new int[b.Height][];
 			unsafe
@@ -675,42 +681,122 @@ namespace CSharpFilters
 
 			b.UnlockBits(bmData);
 
-			for (int x = Math.Max(b.Width / 6, (int)rw[0]); x < Math.Min(5 * b.Width / 6,(int)re[0]); ++x)
+			for (int x = Math.Max(b.Width / 10, (int)rw[0] + 1); x < Math.Min(9 * b.Width / 10, (int)re[0] - 1); ++x)
 			{
+				if (mr[x].Sum() == 0)
+				{
+					if (b.Width / 10 <= x && x < 2 * b.Width / 10)
+						r.Add(1);
+					else if (2 * b.Width / 10 <= x && x < 3 * b.Width / 10)
+						r.Add(2);
+					else if (3 * b.Width / 10 <= x && x < 4 * b.Width / 10)
+						r.Add(3);
+					else if (4 * b.Width / 10 <= x && x < 5 * b.Width / 10)
+						r.Add(4);
+					else if (5 * b.Width / 10 <= x && x < 6 * b.Width / 10)
+						r.Add(5);
+					else if (6 * b.Width / 10 <= x && x < 7 * b.Width / 10)
+						r.Add(6);
+					else if (7 * b.Width / 10 <= x && x < 8 * b.Width / 10)
+						r.Add(7);
+					else if (8 * b.Width / 10 <= x && x < 9 * b.Width / 10)
+						r.Add(8);
+				}
+				if (mr[x].Sum() == 1 || mr[x].Sum() == 2)
+				{
+					if (b.Width / 10 <= x && x < 2 * b.Width / 10)
+						r1.Add(1);
+					else if (2 * b.Width / 10 <= x && x < 3 * b.Width / 10)
+						r1.Add(2);
+					else if (3 * b.Width / 10 <= x && x < 4 * b.Width / 10)
+						r1.Add(3);
+					else if (4 * b.Width / 10 <= x && x < 5 * b.Width / 10)
+						r1.Add(4);
+					else if (5 * b.Width / 10 <= x && x < 6 * b.Width / 10)
+						r1.Add(5);
+					else if (6 * b.Width / 10 <= x && x < 7 * b.Width / 10)
+						r1.Add(6);
+					else if (7 * b.Width / 10 <= x && x < 8 * b.Width / 10)
+						r1.Add(7);
+					else if (8 * b.Width / 10 <= x && x < 9 * b.Width / 10)
+						r1.Add(8);
+				}
 				if (mr[x].Sum() <= 2)
 				{
-					if (x < b.Width / 3)
-						r.Add(1);
-					else if (x < 2 * b.Width / 3)
-						r.Add(2);
-					else
-						r.Add(3);
-				}
-				int lx = mr[x].Where((m, i) => i <= 5 * b.Height / 6).Sum();
-				if (x < b.Width / 3 && lx <= 1)
-				{
-					for (int y = 5 * b.Height / 6; y < b.Height; ++y)
+					int lx = mr[x].Where((m, i) => i <= 5 * b.Height / 6).Sum();
+					if (x < b.Width / 3 && lx == 0)
 					{
-						int hy = fr[y].Where((m, i) => i > x).Sum();
-						if (hy == 0)
-							r.Add(100);
+						for (int y = 5 * b.Height / 6; y < b.Height; ++y)
+						{
+							int hy = fr[y].Where((m, i) => i > x).Sum();
+							if (hy == 0)
+								r.Add(100);
+						}
 					}
 				}
 			}
 
-			for (int y = Math.Max(b.Height / 6,(int)rn[1]); y < Math.Min(5 * b.Height / 6,(int)rs[1]); ++y)
+			for (int y = Math.Max(b.Height / 10, (int)rn[1] + 1); y < Math.Min(9 * b.Height / 10, (int)rs[1] - 1); ++y)
 			{
-				if (fr[y].Sum() <= 2)
+				if (fr[y].Sum() == 0)
 				{
-					if (y < b.Height / 3)
+					if (b.Height / 10 <= y && y < 2 * b.Height / 10)
 						r.Add(101);
-					else if (y < 2 * b.Height / 3)
+					else if (2 * b.Height / 10 <= y && y < 3 * b.Height / 10)
 						r.Add(102);
-					else
+					else if (3 * b.Height / 10 <= y && y < 4 * b.Height / 10)
 						r.Add(103);
+					else if (4 * b.Height / 10 <= y && y < 5 * b.Height / 10)
+						r.Add(104);
+					else if (5 * b.Height / 10 <= y && y < 6 * b.Height / 10)
+						r.Add(105);
+					else if (6 * b.Height / 10 <= y && y < 7 * b.Height / 10)
+						r.Add(106);
+					else if (7 * b.Height / 10 <= y && y < 8 * b.Height / 10)
+						r.Add(107);
+					else if (8 * b.Height / 10 <= y && y < 9 * b.Height / 10)
+						r.Add(108);
+				}
+				if (fr[y].Sum() == 1 || fr[y].Sum() == 2)
+				{
+					if (b.Height / 10 <= y && y < 2 * b.Height / 10)
+						r1.Add(101);
+					else if (2 * b.Height / 10 <= y && y < 3 * b.Height / 10)
+						r1.Add(102);
+					else if (3 * b.Height / 10 <= y && y < 4 * b.Height / 10)
+						r1.Add(103);
+					else if (4 * b.Height / 10 <= y && y < 5 * b.Height / 10)
+						r1.Add(104);
+					else if (5 * b.Height / 10 <= y && y < 6 * b.Height / 10)
+						r1.Add(105);
+					else if (6 * b.Height / 10 <= y && y < 7 * b.Height / 10)
+						r1.Add(106);
+					else if (7 * b.Height / 10 <= y && y < 8 * b.Height / 10)
+						r1.Add(107); 
+					else if (8 * b.Height / 10 <= y && y < 9 * b.Height / 10)
+						r1.Add(108);
 				}
 			}
-			return r.ToArray();
+
+			if (r.Where(m => m >= 1 && m <= 8).Count() == 0)
+			{
+				if (r1.Where(m => m >= 4 && m <= 5).Count() > 0)
+					r.Add(r1.Where(m => m >= 4 && m <= 5).First());
+				else if (r1.Where(m => m >= 1 && m <= 3).Count() > 0)
+					r.Add(r1.Where(m => m >= 1 && m <= 3).First());
+				else if (r1.Where(m => m >= 6 && m <= 8).Count() > 0)
+					r.Add(r1.Where(m => m >= 6 && m <= 8).First());
+			}
+			if (r.Where(m => m >= 101 && m <= 108).Count() == 0)
+			{
+				if(r1.Where(m => m >= 104 && m <= 105).Count() > 0)
+					r.Add(r1.Where(m => m >= 104 && m <= 105).First());
+				else if(r1.Where(m => m >= 101 && m <= 103).Count() > 0)
+					r.Add(r1.Where(m => m >= 101 && m <= 103).First());
+				else if (r1.Where(m => m >= 106 && m <= 108).Count() > 0)
+					r.Add(r1.Where(m => m >= 106 && m <= 108).First());
+			}
+			return r.Distinct().ToArray();
 		}
 		private static bool Converge(int[][] b, int range = 4)
 		{
